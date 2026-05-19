@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墙角度测量可视化工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-100 min-h-screen py-8 px-4">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-8">墙角度测量可视化工具</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">测量方法示意图</h2>
+                
+                <div class="flex justify-center mb-6">
+                    <svg width="380" height="320" viewBox="0 0 380 320" class="border border-gray-200 rounded-lg bg-white">
+                        <!-- 墙面 -->
+                        <path d="M50 270 L50 50" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+                        <path d="M50 270 L330 270" stroke="#94a3b8" stroke-width="8" stroke-linecap="round"/>
+                        
+                        <!-- 地面阴影 -->
+                        <path d="M50 270 L330 270 L330 290 L50 290 Z" fill="#e2e8f0"/>
+                        
+                        <!-- 测量线 OA -->
+                        <line x1="50" y1="270" x2="50" y2="120" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+                        <!-- 测量线 OB -->
+                        <line x1="50" y1="270" x2="200" y2="270" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+                        <!-- 测量线 AB -->
+                        <line x1="50" y1="120" x2="200" y2="270" stroke="#22c55e" stroke-width="3"/>
+                        
+                        <!-- 顶点标记 -->
+                        <circle cx="50" cy="270" r="6" fill="#1e40af"/>
+                        <circle cx="50" cy="120" r="6" fill="#1e40af"/>
+                        <circle cx="200" cy="270" r="6" fill="#1e40af"/>
+                        
+                        <!-- 标签 -->
+                        <text x="35" y="290" font-size="16" font-weight="bold" fill="#1e293b">O (墙角)</text>
+                        <text x="25" y="110" font-size="16" font-weight="bold" fill="#1e293b">A</text>
+                        <text x="205" y="290" font-size="16" font-weight="bold" fill="#1e293b">B</text>
+                        
+                        <!-- 长度标签 -->
+                        <text x="20" y="195" font-size="14" fill="#ef4444" font-weight="bold">L</text>
+                        <text x="125" y="260" font-size="14" fill="#ef4444" font-weight="bold">L</text>
+                        <text x="130" y="180" font-size="14" fill="#22c55e" font-weight="bold">C (需要测量)</text>
+                        
+                        <!-- 角度标注 -->
+                        <path d="M50 270 L90 270 A40 40 0 0 0 50 230 Z" fill="none" stroke="#f59e0b" stroke-width="2"/>
+                        <text x="75" y="250" font-size="14" fill="#f59e0b" font-weight="bold">θ</text>
+                        
+                        <!-- 说明文字 -->
+                        <text x="190" y="30" font-size="14" text-anchor="middle" fill="#475569">
+                            从墙角O点沿两个墙面各量出相同长度L
+                        </text>
+                        <text x="190" y="50" font-size="14" text-anchor="middle" fill="#475569">
+                            标记A点和B点，然后测量A、B之间的距离C
+                        </text>
+                    </svg>
+                </div>
+                
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-medium text-blue-800 mb-2">核心原理</h3>
+                    <p class="text-gray-700 mb-2">
+                        余弦定理只关心<strong>边长的比例</strong>，不关心绝对值。无论墙长是5厘米还是5米，只要从墙角O点沿两个墙面量出<strong>相同的长度L</strong>，然后测量A、B两点之间的距离C，就能精确计算出墙的角度。
+                    </p>
+                    <p class="text-gray-700">
+                        <strong>公式：</strong> θ = arccos[(2L² - C²) / (2L²)]
+                    </p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">角度计算器</h2>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-gray-600 mb-2">测量长度 L (毫米)</label>
+                        <input type="number" id="lengthL" step="1" min="5" max="10000" value="1000" 
+                               class="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">
+                            <strong>推荐：</strong>长墙用1000mm(1米)，短墙用200mm(20厘米)
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-600 mb-2">AB距离 C (毫米)</label>
+                        <input type="number" id="lengthC" step="1" min="1" max="20000" value="1414" 
+                               class="w-full px-4 py-3 text-xl border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">至少测量3次，取平均值</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <button id="calculateBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-200 text-lg">
+                        计算并绘制
+                    </button>
+                    <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-6 rounded-lg transition duration-200">
+                        重置
+                    </button>
+                </div>
+                
+                <div id="resultContainer" class="p-6 bg-blue-50 rounded-lg text-center mb-6">
+                    <p class="text-gray-600 mb-2">墙的角度为</p>
+                    <p id="wallAngle" class="text-5xl font-bold text-blue-700 mb-2">90.00°</p>
+                    <p id="angleType" class="text-lg text-gray-700">标准直角 ✅</p>
+                    <p id="errorTip" class="text-sm text-gray-500 mt-2">理论测量误差约：±0.1°</p>
+                </div>
+                
+                <!-- 新增：计算结果图形展示 -->
+                <div>
+                    <h3 class="font-medium text-gray-700 mb-3 text-center">角度示意图</h3>
+                    <div class="flex justify-center">
+                        <canvas id="angleCanvas" width="300" height="300" class="border border-gray-200 rounded-lg bg-white"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-gray-500 mt-2">
+                        蓝色线条代表两个墙面，红色弧线标注的就是你测量的墙角度
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">快速参考表</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium text-gray-700 mb-2">长墙推荐 (L=1000mm)</h3>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-3 py-2 text-left">C(mm)</th>
+                                <th class="px-3 py-2 text-left">角度</th>
+                                <th class="px-3 py-2 text-left">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="px-3 py-1">1414</td><td class="px-3 py-1 font-medium">90°</td><td class="px-3 py-1">标准直角</td></tr>
+                            <tr><td class="px-3 py-1">1000</td><td class="px-3 py-1 font-medium">60°</td><td class="px-3 py-1">锐角</td></tr>
+                            <tr><td class="px-3 py-1">1732</td><td class="px-3 py-1 font-medium">120°</td><td class="px-3 py-1">常见钝角</td></tr>
+                            <tr><td class="px-3 py-1">1848</td><td class="px-3 py-1 font-medium">135°</td><td class="px-3 py-1">45度切角</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium text-gray-700 mb-2">短墙推荐 (L=200mm)</h3>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-3 py-2 text-left">C(mm)</th>
+                                <th class="px-3 py-2 text-left">角度</th>
+                                <th class="px-3 py-2 text-left">说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="px-3 py-1">283</td><td class="px-3 py-1 font-medium">90°</td><td class="px-3 py-1">标准直角</td></tr>
+                            <tr><td class="px-3 py-1">200</td><td class="px-3 py-1 font-medium">60°</td><td class="px-3 py-1">锐角</td></tr>
+                            <tr><td class="px-3 py-1">346</td><td class="px-3 py-1 font-medium">120°</td><td class="px-3 py-1">常见钝角</td></tr>
+                            <tr><td class="px-3 py-1">369</td><td class="px-3 py-1 font-medium">135°</td><td class="px-3 py-1">45度切角</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">详细操作步骤</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium text-green-700 mb-2">第一步：标记测量点</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>找到两个墙面相交的墙角顶点，标记为<strong>O点</strong></li>
+                        <li>根据墙的长度选择合适的<strong>L值</strong>：
+                            <ul class="list-disc list-inside ml-4 mt-1 text-sm">
+                                <li>墙长≥1米：推荐L=1000mm(1米)</li>
+                                <li>墙长20-100厘米：推荐L=200mm(20厘米)</li>
+                                <li>墙长5-20厘米：推荐L=墙能允许的最大值</li>
+                            </ul>
+                        </li>
+                        <li>从O点沿第一个墙面量出L长度，标记为<strong>A点</strong></li>
+                        <li>从O点沿第二个墙面量出相同的L长度，标记为<strong>B点</strong></li>
+                    </ol>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium text-green-700 mb-2">第二步：测量与计算</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                        <li>用钢卷尺或直尺测量<strong>A点和B点之间的直线距离C</strong></li>
+                        <li>至少测量3次，取平均值以减少误差</li>
+                        <li>在计算器中输入L值和C值</li>
+                        <li>点击"计算并绘制"按钮，得到精确的角度值和示意图</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
+                <h3 class="font-medium text-yellow-800 mb-2">提高精度的关键技巧</h3>
+                <ul class="list-disc list-inside space-y-1 text-gray-700">
+                    <li>标记点要紧贴墙面和地面的交线，用铅笔尖做细小标记</li>
+                    <li>测量AB距离时，直尺要完全拉直，不能弯曲或倾斜</li>
+                    <li>使用毫米为单位读数，不要四舍五入</li>
+                    <li>测量长度L越大，结果越精确（1米长度的误差约为±0.1°）</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lengthLInput = document.getElementById('lengthL');
+            const lengthCInput = document.getElementById('lengthC');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const wallAngleElement = document.getElementById('wallAngle');
+            const angleTypeElement = document.getElementById('angleType');
+            const errorTipElement = document.getElementById('errorTip');
+            const angleCanvas = document.getElementById('angleCanvas');
+            const angleCtx = angleCanvas.getContext('2d');
+            
+            // 初始计算和绘制
+            calculateAndDraw();
+            
+            calculateBtn.addEventListener('click', calculateAndDraw);
+            resetBtn.addEventListener('click', function() {
+                lengthLInput.value = '1000';
+                lengthCInput.value = '1414';
+                calculateAndDraw();
+            });
+            
+            [lengthLInput, lengthCInput].forEach(input => {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        calculateAndDraw();
+                    }
+                });
+            });
+            
+            function calculateAndDraw() {
+                const L = parseFloat(lengthLInput.value);
+                const C = parseFloat(lengthCInput.value);
+                
+                if (isNaN(L) || isNaN(C) || L <= 0 || C <= 0 || C >= 2*L) {
+                    alert('请输入有效的数值，AB距离不能超过两倍的测量长度');
+                    return;
+                }
+                
+                // 余弦定理计算角度
+                const cosC = (2 * L * L - C * C) / (2 * L * L);
+                const clampedCosC = Math.max(-1, Math.min(1, cosC));
+                const angleC = Math.acos(clampedCosC) * 180 / Math.PI;
+                
+                // 判断角度类型
+                let angleType = '';
+                if (Math.abs(angleC - 90) < 0.5) {
+                    angleType = '标准直角 ✅';
+                } else if (angleC < 90) {
+                    angleType = `锐角 (比直角小 ${(90 - angleC).toFixed(1)}°)`;
+                } else {
+                    angleType = `钝角 (比直角大 ${(angleC - 90).toFixed(1)}°)`;
+                }
+                
+                // 计算理论测量误差（假设±1mm的测量误差）
+                const errorAngle = (180 / Math.PI) * (1 / Math.sqrt(L*L - (C*C/4)));
+                
+                // 更新显示
+                wallAngleElement.textContent = angleC.toFixed(2) + '°';
+                angleTypeElement.textContent = angleType;
+                errorTipElement.textContent = `理论测量误差约：±${errorAngle.toFixed(2)}°`;
+                
+                // 绘制角度示意图
+                drawAngleDiagram(angleC);
+            }
+            
+            function drawAngleDiagram(angle) {
+                // 清除画布
+                angleCtx.clearRect(0, 0, angleCanvas.width, angleCanvas.height);
+                
+                const centerX = angleCanvas.width / 2;
+                const centerY = angleCanvas.height - 50;
+                const lineLength = 120;
+                const arcRadius = 50;
+                
+                // 绘制第一条墙面（水平向右）
+                angleCtx.beginPath();
+                angleCtx.moveTo(centerX, centerY);
+                angleCtx.lineTo(centerX + lineLength, centerY);
+                angleCtx.strokeStyle = '#3b82f6';
+                angleCtx.lineWidth = 3;
+                angleCtx.stroke();
+                
+                // 计算第二条墙面的终点坐标
+                const angleRad = angle * Math.PI / 180;
+                const endX = centerX + lineLength * Math.cos(angleRad);
+                const endY = centerY - lineLength * Math.sin(angleRad);
+                
+                // 绘制第二条墙面
+                angleCtx.beginPath();
+                angleCtx.moveTo(centerX, centerY);
+                angleCtx.lineTo(endX, endY);
+                angleCtx.strokeStyle = '#3b82f6';
+                angleCtx.lineWidth = 3;
+                angleCtx.stroke();
+                
+                // 绘制角度弧线
+                angleCtx.beginPath();
+                angleCtx.arc(centerX, centerY, arcRadius, -angleRad, 0, true);
+                angleCtx.strokeStyle = '#ef4444';
+                angleCtx.lineWidth = 2;
+                angleCtx.stroke();
+                
+                // 绘制直角符号（如果是直角）
+                if (Math.abs(angle - 90) < 0.5) {
+                    angleCtx.beginPath();
+                    angleCtx.moveTo(centerX + 20, centerY);
+                    angleCtx.lineTo(centerX + 20, centerY - 20);
+                    angleCtx.lineTo(centerX, centerY - 20);
+                    angleCtx.strokeStyle = '#ef4444';
+                    angleCtx.lineWidth = 2;
+                    angleCtx.stroke();
+                }
+                
+                // 标注角度值
+                angleCtx.font = 'bold 18px Arial';
+                angleCtx.fillStyle = '#ef4444';
+                angleCtx.textAlign = 'center';
+                
+                // 计算角度标签位置
+                const labelRadius = arcRadius + 25;
+                const labelAngle = angleRad / 2;
+                const labelX = centerX + labelRadius * Math.cos(labelAngle);
+                const labelY = centerY - labelRadius * Math.sin(labelAngle);
+                
+                angleCtx.fillText(`${angle.toFixed(1)}°`, labelX, labelY);
+                
+                // 标注墙面
+                angleCtx.font = '14px Arial';
+                angleCtx.fillStyle = '#64748b';
+                angleCtx.fillText('墙面1', centerX + lineLength/2, centerY + 20);
+                angleCtx.fillText('墙面2', endX - 20, endY - 10);
+                
+                // 标注墙角
+                angleCtx.font = 'bold 14px Arial';
+                angleCtx.fillStyle = '#1e293b';
+                angleCtx.fillText('墙角', centerX, centerY + 20);
+            }
+        });
+    </script>
+</body>
+</html>
